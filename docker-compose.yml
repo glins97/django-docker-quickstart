@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+
+  # database
+  database1:
+    image: postgres:10
+    volumes:
+      - database1_volume:/var/lib/postgresql/data
+    env_file:
+      - config/db/database1_env
+
+  # project execution
+  aiproject:
+    build: .
+    environment:
+      - DJANGO_SETTINGS_MODULE
+    volumes:
+      - .:/opt/services/aiproject/src
+      - static:/opt/services/aiproject/static
+      - media:/opt/services/aiproject/media
+    depends_on:
+      - database1
+
+  # nginx (good wsgi)
+  nginx:
+    image: nginx:1.13
+    ports:
+      - 8000:80
+    volumes:
+      - ./config/nginx/conf.d:/etc/nginx/conf.d
+      - static:/opt/services/aiproject/static
+      - media:/opt/services/aiproject/media
+    depends_on:
+      - aiproject
+
+volumes:
+  database1_volume:
+  static:
+  media:
+  code:
+    - ./scripts:/app/scripts
+    - ./files:/app/files
+
+
